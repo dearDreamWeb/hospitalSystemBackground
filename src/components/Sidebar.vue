@@ -64,6 +64,11 @@ export default {
                 title: "新闻管理",
             },
             {
+                icon: "el-icon-lx-cascades",
+                index: "/admin",
+                title: "管理员管理",
+            },
+            {
                 icon: "el-icon-lx-copy",
                 index: "/tabs",
                 title: "tab选项卡",

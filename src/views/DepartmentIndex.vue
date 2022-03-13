@@ -20,7 +20,7 @@ export default {
   name: "departmentIndex",
   components: { Outpatient, Department },
   setup() {
-    let tabVal = reactive("outpatient");
+    let tabVal = reactive("section");
 
     return {
       tabVal,
