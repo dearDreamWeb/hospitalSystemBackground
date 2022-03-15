@@ -159,3 +159,34 @@ export const getOutpatient = (data) => {
     });
 };
 
+// 添加医生
+export const addDoctor = (data) => {
+    return request('/doctor', {
+        method: 'post',
+        data
+    });
+};
+// 删除医生
+export const deleteDoctor = (data) => {
+    return request('/doctor', {
+        method: 'delete',
+        data
+    });
+};
+
+// 修改医生
+export const updateDoctor = (data) => {
+    return request('/doctor', {
+        method: 'put',
+        data
+    });
+};
+
+// 查询医生
+export const getDoctor = (data) => {
+    return request('/doctor', {
+        method: 'get',
+        data
+    });
+};
+

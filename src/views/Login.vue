@@ -66,7 +66,6 @@ export default {
     const submitForm = async () => {
       login.value.validate(async (valid) => {
         if (valid) {
-          console.log(123123);
           const res = await adminLogin({
             phone: param.username,
             pwd: param.password,

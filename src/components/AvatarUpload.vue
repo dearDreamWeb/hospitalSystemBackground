@@ -1,7 +1,7 @@
 <template>
   <el-upload
     class="avatar-uploader"
-    action="https://jsonplaceholder.typicode.com/posts/"
+    :action="action"
     :show-file-list="false"
     :on-success="handleAvatarSuccess"
     :before-upload="beforeAvatarUpload"
@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Plus } from "@element-plus/icons-vue";
 
@@ -26,6 +26,11 @@ export default {
   },
   setup(props, ctx) {
     const imageUrl = ref(props.imgUrl);
+    let action = reactive("");
+
+    onMounted(() => {
+      action = `${import.meta.env.VITE_BASE_URL}/common/imageUpload`;
+    });
 
     /**
      * 上传完成
@@ -35,7 +40,7 @@ export default {
       console.log(file);
       //   ctx.emit("changeImage", newHtml);
     };
-    const beforeAvatarUpload = file => {
+    const beforeAvatarUpload = (file) => {
       const isJPG = file.type === "image/jpeg";
       const isLt2M = file.size / 1024 / 1024 < 2;
 
@@ -48,6 +53,7 @@ export default {
       return isJPG && isLt2M;
     };
     return {
+      action,
       handleAvatarSuccess,
       beforeAvatarUpload,
     };
