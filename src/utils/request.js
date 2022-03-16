@@ -9,7 +9,7 @@ let test2 = 'http://dockerhospital.liqiu.vip/hospital';
 const instance = axios.create({
     baseURL: import.meta.env.MODE === 'production'
         ? import.meta.env.VITE_BASE_URL
-        : test,
+        : test1,
     timeout: 5000
 });
 
