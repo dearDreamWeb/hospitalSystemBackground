@@ -4,7 +4,7 @@
       <div class="handle-box">
         <el-input
           v-model="name"
-          placeholder="用户名"
+          placeholder="请输入用户名或手机号"
           class="handle-input mr10"
         ></el-input>
         <el-button type="primary" icon="el-icon-search" @click="handleSearch"
@@ -24,7 +24,7 @@
         <el-table-column
           prop="id"
           label="ID"
-          width="55"
+          width="280"
           align="center"
         ></el-table-column>
         <el-table-column
@@ -33,19 +33,24 @@
           label="医生名字"
         ></el-table-column>
         <el-table-column
-          prop="section"
+          prop="sectionName"
           width="80"
           label="科室"
         ></el-table-column>
         <el-table-column
-          prop="outpatientId"
+          prop="outpatientName"
           width="150"
           label="门诊"
         ></el-table-column>
         <el-table-column
-          prop="technicalId"
-          width="50"
+          prop="technicalName"
+          width="150"
           label="职称"
+        ></el-table-column>
+        <el-table-column
+          prop="phone"
+          width="120"
+          label="手机号码"
         ></el-table-column>
         <el-table-column
           prop="workAge"
@@ -54,7 +59,11 @@
         ></el-table-column>
         <el-table-column prop="age" width="50" label="年龄"></el-table-column>
         <el-table-column prop="sex" width="50" label="性别"></el-table-column>
-        <el-table-column prop="adept" width="50" label="简介"></el-table-column>
+        <el-table-column
+          prop="adept"
+          min-width="300"
+          label="简介"
+        ></el-table-column>
 
         <el-table-column width="150" label="头像(查看大图)" align="center">
           <template #default="scope">
@@ -67,12 +76,7 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="phone"
-          width="120"
-          label="手机号码"
-        ></el-table-column>
-        <el-table-column
-          prop="date"
+          prop="createTime"
           width="120"
           label="注册时间"
         ></el-table-column>
@@ -88,7 +92,7 @@
               type="text"
               icon="el-icon-delete"
               class="red"
-              @click="handleDelete(scope.$index, scope.row)"
+              @click="handleDelete(scope.row.id)"
               >删除</el-button
             >
           </template>
@@ -107,28 +111,36 @@
     </div>
 
     <!-- 编辑弹出框 -->
-    <el-dialog title="编辑" v-model="editVisible" width="30%">
+    <el-dialog title="编辑" v-model="editVisible" width="40%">
       <el-form ref="ruleFormRef" :model="form" label-width="70px">
         <el-form-item label="用户名" prop="name">
           <el-input v-model="form.name"></el-input>
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone"></el-input>
+          <el-input
+            v-model="form.phone"
+            :disabled="modelStatus === 0"
+          ></el-input>
         </el-form-item>
         <el-form-item label="工龄" prop="workAge">
-          <el-input v-model="form.workAge"></el-input>
+          <el-input-number
+            v-model="form.workAge"
+            :min="1"
+            :max="100"
+          ></el-input-number>
         </el-form-item>
         <el-form-item label="年龄" prop="age">
-          <el-input v-model="form.age"></el-input>
+          <el-input-number
+            v-model="form.age"
+            :min="1"
+            :max="100"
+          ></el-input-number>
         </el-form-item>
         <el-form-item label="性别" prop="sex">
           <el-radio-group v-model="form.sex">
             <el-radio label="男" value="男"></el-radio>
             <el-radio label="女" value="女"></el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="擅长" prop="adept">
-          <el-input v-model="form.adept"></el-input>
         </el-form-item>
         <el-form-item label="科室" prop="section">
           <el-select
@@ -154,9 +166,31 @@
             ></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="职称" prop="technicalId">
+          <el-select v-model="form.technicalId" placeholder="选择职称">
+            <el-option
+              v-for="item in allTechnical"
+              :key="item.id"
+              :label="item.technical"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
 
         <el-form-item label="头像" prop="avatarUrl" class="form-avatar">
-          <AvatarUpload :imageUrl="form.avatarUrl || ''" />
+          <AvatarUpload
+            :imageUrl="avatarUrl || ''"
+            @changeImage="changeImage"
+          />
+        </el-form-item>
+        <el-form-item label="擅长" prop="adept">
+          <el-input
+            type="textarea"
+            v-model="form.adept"
+            maxlength="100"
+            show-word-limit
+            rows="4"
+          ></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -176,6 +210,7 @@ import {
   addDoctor,
   deleteDoctor,
   updateDoctor,
+  getTechnical,
   getDoctor,
   getSection,
   getOutpatient,
@@ -190,25 +225,28 @@ export default {
       page: 1,
       pageSize: 10,
     });
-    const name = reactive("");
+    const name = ref("");
     const tableData = ref([]);
     const pageTotal = ref(0);
     const ruleFormRef = ref();
     const modelStatus = ref(0); // 0: 编辑医生 1：新增医生
     const allSections = ref([]); // 全部科室
     const allOutpatient = ref([]); // 全部门诊
+    const allTechnical = ref([]); // 全部职称
     // 表格编辑时弹窗和保存
     const editVisible = ref(false);
     let form = ref({});
+    const avatarUrl = ref("");
 
     onMounted(() => {
       getData();
       getSectionHandle();
+      getAllTechnical();
     });
 
     // 获取表格数据
     const getData = async () => {
-      const res = await getDoctor({ name, ...query });
+      const res = await getDoctor({ name: name.value, ...query });
       if (res.success) {
         tableData.value = res.data.items;
       }
@@ -219,6 +257,14 @@ export default {
       const res = await getSection();
       if (res.success) {
         allSections.value = res.data.items;
+      }
+    };
+
+    // 获取职称
+    const getAllTechnical = async () => {
+      const res = await getTechnical();
+      if (res.success) {
+        allTechnical.value = res.data.items;
       }
     };
 
@@ -233,6 +279,7 @@ export default {
       modelStatus.value = 1;
       editVisible.value = true;
       form.value = {};
+      avatarUrl.value = "";
     };
 
     // 分页导航
@@ -240,48 +287,73 @@ export default {
       query.page = val;
     };
 
+    // 图片变更
+    const changeImage = (data) => {
+      const { absolutePath, name } = data;
+      form.value.avatarName = name;
+      avatarUrl.value = absolutePath;
+    };
+
     // 删除操作
-    const handleDelete = (index) => {
+    const handleDelete = (id) => {
       // 二次确认删除
       ElMessageBox.confirm("确定要删除吗？", "提示", {
         type: "warning",
       })
-        .then(() => {
+        .then(async () => {
+          const res = await deleteDoctor(id);
+          if (!res.success) {
+            ElMessage.info(res.message);
+            return;
+          }
           ElMessage.success("删除成功");
-          tableData.value.splice(index, 1);
+          getData();
         })
         .catch(() => {});
     };
 
     // 选择科室
     const sectionChange = async (id) => {
+      form.value.outpatientId = "";
       const res = await getOutpatient({ sectionId: id });
       if (res.success) {
         if (res.data.items.length) {
           allOutpatient.value = res.data.items;
         } else {
           ElMessage.info("该科室没有门诊");
+          allOutpatient.value = [];
         }
       }
     };
 
     const handleEdit = (index, row) => {
+      const { sectionId } = row;
       modelStatus.value = 0;
       editVisible.value = true;
+      sectionChange(sectionId);
+      form.value = row;
+      form.value.section = sectionId;
+      avatarUrl.value = row.avatarUrl;
     };
 
     const saveEdit = async () => {
       editVisible.value = false;
       if (modelStatus.value === 0) {
-        // const res = await addDoctor({ ...form.value });
-        // if (!res.success) {
-        //   ElMessage.info(res.message);
-        //   return;
-        // }
-        // ElMessage.success("修改职称成功");
+        const res = await updateDoctor({
+          ...form.value,
+          avatarUrl: form.value.avatarName || form.value.avatarUrl,
+        });
+        if (!res.success) {
+          ElMessage.info(res.message);
+          return;
+        }
+        ElMessage.success("修改职称成功");
         getData();
       } else if (modelStatus.value === 1) {
-        const res = await addDoctor({ ...form.value });
+        const res = await addDoctor({
+          ...form.value,
+          avatarUrl: form.value.avatarName,
+        });
         if (!res.success) {
           ElMessage.info(res.message);
           return;
@@ -294,6 +366,7 @@ export default {
     return {
       name,
       query,
+      avatarUrl,
       tableData,
       pageTotal,
       editVisible,
@@ -302,6 +375,7 @@ export default {
       ruleFormRef,
       allSections,
       allOutpatient,
+      allTechnical,
       handleSearch,
       handlePageChange,
       handleDelete,
@@ -309,6 +383,7 @@ export default {
       saveEdit,
       addDoctorHandle,
       sectionChange,
+      changeImage,
     };
   },
 };

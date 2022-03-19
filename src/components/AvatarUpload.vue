@@ -2,6 +2,7 @@
   <el-upload
     class="avatar-uploader"
     :action="action"
+    name="image"
     :show-file-list="false"
     :on-success="handleAvatarSuccess"
     :before-upload="beforeAvatarUpload"
@@ -22,14 +23,14 @@ export default {
   name: "avatarUpload123",
   components: { Plus },
   props: {
-    imgUrl: String,
+    imageUrl: String,
   },
   setup(props, ctx) {
     const imageUrl = ref(props.imgUrl);
-    let action = reactive("");
+    let action = ref("");
 
     onMounted(() => {
-      action = `${import.meta.env.VITE_BASE_URL}/common/imageUpload`;
+      action.value = `${import.meta.env.VITE_BASE_URL}/common/imageUpload`;
     });
 
     /**
@@ -37,8 +38,11 @@ export default {
      */
     const handleAvatarSuccess = (res, file) => {
       imageUrl.value = URL.createObjectURL(file.raw);
-      console.log(file);
-      //   ctx.emit("changeImage", newHtml);
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
+      }
+      ctx.emit("changeImage", res.data);
     };
     const beforeAvatarUpload = (file) => {
       const isJPG = file.type === "image/jpeg";

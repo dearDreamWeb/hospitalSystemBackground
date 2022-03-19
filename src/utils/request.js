@@ -11,7 +11,7 @@ const instance = axios.create({
         ? import.meta.env.VITE_BASE_URL
         : test1,
     timeout: 5000
-});
+})
 
 instance.interceptors.response.use(
     response => {
