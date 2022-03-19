@@ -80,6 +80,15 @@
             {{ moment(scope.row.createTime).format("YYYY-MM-DD HH:mm:ss") }}
           </template>
         </el-table-column>
+        <el-table-column width="200" prop="updateTime" label="更新时间">
+          <template #default="scope">
+            {{
+              moment(scope.row.updateTime || scope.row.createTime).format(
+                "YYYY-MM-DD HH:mm:ss"
+              )
+            }}
+          </template>
+        </el-table-column>
         <el-table-column
           prop="status"
           width="180"
@@ -143,7 +152,13 @@
             :disabled="modelStatus === 0"
           ></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="pwd" v-if="modelStatus === 1">
+        <el-form-item
+          label="密码"
+          prop="pwd"
+          v-if="modelStatus === 1"
+          type="password"
+          show-password
+        >
           <el-input v-model="form.pwd"></el-input>
         </el-form-item>
         <el-form-item label="工龄" prop="workAge">
@@ -275,6 +290,7 @@ export default {
       const res = await getDoctor({ name: name.value, ...query });
       if (res.success) {
         tableData.value = res.data.items;
+        pageTotal.value = res.data.total;
       }
     };
 
@@ -311,6 +327,7 @@ export default {
     // 分页导航
     const handlePageChange = (val) => {
       query.page = val;
+      getData();
     };
 
     // 图片变更

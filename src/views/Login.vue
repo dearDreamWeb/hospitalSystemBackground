@@ -73,8 +73,9 @@ export default {
           if (!res.success) {
             ElMessage.info(res.message);
           }
+          console.log(res)
           localStorage.setItem("token", res.data.token);
-          localStorage.setItem("ms_username", param.username);
+          localStorage.setItem("userInfo", JSON.stringify(res.data.userInfo));
           ElMessage.success("登录成功");
           router.push("/");
         } else {

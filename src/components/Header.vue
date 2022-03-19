@@ -70,6 +70,10 @@ export default {
       if (document.body.clientWidth < 1500) {
         collapseChage();
       }
+      const userInfo = localStorage.getItem("userInfo")
+        ? JSON.parse(localStorage.getItem("userInfo"))
+        : {};
+      store.commit("addUserInfo", userInfo);
     });
 
     // 用户名下拉菜单选择事件
@@ -77,6 +81,7 @@ export default {
     const handleCommand = (command) => {
       if (command == "loginout") {
         localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
         router.push("/login");
       } else if (command == "user") {
         router.push("/user");
