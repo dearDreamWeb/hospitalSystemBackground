@@ -24,7 +24,7 @@
         <el-table-column
           prop="id"
           label="ID"
-          width="280"
+          width="300"
           align="center"
         ></el-table-column>
         <el-table-column
@@ -142,6 +142,9 @@
             v-model="form.phone"
             :disabled="modelStatus === 0"
           ></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="pwd" v-if="modelStatus === 1">
+          <el-input v-model="form.pwd"></el-input>
         </el-form-item>
         <el-form-item label="工龄" prop="workAge">
           <el-input-number
