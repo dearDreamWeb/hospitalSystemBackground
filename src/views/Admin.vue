@@ -5,8 +5,8 @@
         <div class="container">
           <div class="handle-box">
             <el-input
-              v-model="searchContext"
-              placeholder="请输入搜索标题或内容"
+              v-model="name"
+              placeholder="请输入搜索名称或手机号"
               class="handle-input mr10"
             ></el-input>
             <el-button
@@ -16,7 +16,7 @@
               >搜索</el-button
             >
             <el-button type="primary" icon="el-icon-plus" @click="addNews"
-              >新增新闻</el-button
+              >新增管理员</el-button
             >
           </div>
           <el-table
@@ -29,26 +29,29 @@
             <el-table-column
               prop="id"
               label="ID"
-              width="55"
+              width="300"
               align="center"
             ></el-table-column>
             <el-table-column
-              min-width="240"
-              prop="title"
-              label="标题"
+              min-width="100"
+              prop="name"
+              label="名称"
             ></el-table-column>
-            <el-table-column min-width="350" prop="content" label="内容">
-              <template #default="scope">
-                <div>
-                  {{ filterHtml(scope.row.content) }}
-                </div>
-              </template>
-            </el-table-column>
             <el-table-column
               width="180"
-              prop="createUser"
-              label="创建人"
+              prop="phone"
+              label="手机号码"
             ></el-table-column>
+            <el-table-column width="150" label="头像(查看大图)" align="center">
+              <template #default="scope">
+                <el-image
+                  class="table-td-thumb"
+                  :src="scope.row.avatarUrl"
+                  :preview-src-list="[scope.row.avatarUrl]"
+                >
+                </el-image>
+              </template>
+            </el-table-column>
             <el-table-column width="200" prop="createTime" label="创建时间">
               <template #default="scope">
                 {{ moment(scope.row.createTime).format("YYYY-MM-DD HH:mm:ss") }}
@@ -70,12 +73,6 @@
               fixed="right"
             >
               <template #default="scope">
-                <el-button
-                  type="text"
-                  icon="el-icon-edit"
-                  @click="previewHandle(scope.$index, scope.row)"
-                  >预览
-                </el-button>
                 <el-button
                   type="text"
                   icon="el-icon-edit"
@@ -107,18 +104,23 @@
       </el-tab-pane>
     </el-tabs>
 
-    <!-- 预览框 -->
-    <el-dialog title="预览" v-model="previewVisible" width="50%">
-      <div ref="previewRef" class="preview-dialog"></div>
-    </el-dialog>
     <!-- 编辑弹出框 -->
-    <el-dialog title="编辑" v-model="editVisible" width="50%">
+    <el-dialog title="编辑" v-model="editVisible" width="30%">
       <el-form label-width="70px">
-        <el-form-item label="标题">
-          <el-input v-model="form.title"></el-input>
+        <el-form-item label="名称">
+          <el-input v-model="form.name"></el-input>
         </el-form-item>
-        <el-form-item label="内容" v-if="editVisible">
-          <Editor :content="form.content" @changeEditor="changeEditor" />
+        <el-form-item label="手机号">
+          <el-input v-model="form.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" v-if="modelStatus === 0">
+          <el-input v-model="form.pwd" type="password" show-password></el-input>
+        </el-form-item>
+        <el-form-item label="头像" class="form-avatar">
+          <AvatarUpload
+            :imageUrl="showAvatarUrl || ''"
+            @changeImage="changeImage"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -135,31 +137,31 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
-import { getNews, deleteNews, addNewsApi, updateNews } from "../api/index";
-import Editor from "./Editor.vue";
+import { getAdmin, deleteAdmin, addAdmin, updateAdmin } from "../api/index";
+import AvatarUpload from "../components/AvatarUpload.vue";
 
 export default {
   name: "admin",
-  components: { Editor },
+  components: { AvatarUpload },
   setup() {
     const pageSizes = reactive([10, 20, 50, 100]);
     let query = reactive({
       page: 1,
       pageSize: pageSizes[0],
     });
-    const previewRef = ref(null);
-    const searchContext = ref("");
+    const name = ref("");
     const tableData = ref([]);
     const total = ref(0);
     let form = ref({
-      title: "",
-      content: "",
+      name: "",
+      pwd: "",
+      phone: "",
+      avatarUrl: "",
     });
     const modelStatus = ref(0); // 0: 新增 1：编辑
     // 表格编辑时弹窗和保存
     const editVisible = ref(false);
-    // 预览弹出框
-    const previewVisible = ref(false);
+    const showAvatarUrl = ref("");
 
     onMounted(() => {
       getData();
@@ -171,10 +173,7 @@ export default {
         page: query.page,
         pageSize: query.pageSize,
       };
-      if (searchContext.value) {
-        params.searchContext = searchContext.value;
-      }
-      const res = await getNews(params);
+      const res = await getAdmin({ ...params, name: name.value });
       if (!res.success) {
         ElMessage.info(res.message);
         return;
@@ -196,7 +195,15 @@ export default {
     const addNews = () => {
       editVisible.value = true;
       modelStatus.value = 0;
-      form.value = { title: "", content: "" };
+      form.value = {};
+      showAvatarUrl.value = "";
+    };
+
+    // 图片变更
+    const changeImage = (data) => {
+      const { absolutePath, name } = data;
+      form.value.avatarUrl = name;
+      showAvatarUrl.value = absolutePath;
     };
 
     // 分页导航
@@ -218,7 +225,7 @@ export default {
         type: "warning",
       })
         .then(async () => {
-          const res = await deleteNews({ id: row.id, status: 0 });
+          const res = await deleteAdmin(row.id);
           if (res.success) {
             ElMessage.success("删除成功");
             getData();
@@ -232,16 +239,6 @@ export default {
       form.value.content = data;
     };
 
-    // 去掉富文本的标签
-    const filterHtml = (data) => {
-      const reg = /<[^\>]*>/g;
-      let str = data.replaceAll(reg, "");
-      if (str.length > 50) {
-        str = `${str.slice(0, 50)}......`;
-      }
-      return str;
-    };
-
     /**
      * 编辑
      */
@@ -249,16 +246,7 @@ export default {
       form.value = row;
       modelStatus.value = 1;
       editVisible.value = true;
-    };
-
-    /**
-     * 预览
-     */
-    const previewHandle = (index, row) => {
-      previewVisible.value = true;
-      setTimeout(() => {
-        previewRef.value.innerHTML = row.content;
-      }, 10);
+      showAvatarUrl.value = form.value.avatarUrl;
     };
 
     /**
@@ -266,22 +254,20 @@ export default {
      */
     const saveEdit = async () => {
       const { id, title, content } = form.value;
-      if (!title || !content) {
-        ElMessage.info("请输入完整的表单");
-        return;
-      }
       if (modelStatus.value === 0) {
-        const res = await addNewsApi({ title, content });
+        const res = await addAdmin({ ...form.value });
         if (res.success) {
-          ElMessage.success("新增新闻成功");
+          ElMessage.success("新增管理员成功");
           getData();
         }
       } else {
-        const res = await updateNews({ id, title, content, status: 1 });
-        if (res.success) {
-          ElMessage.success("修改新闻成功");
-          getData();
+        const res = await updateAdmin({ ...form.value });
+        if (!res.success) {
+          ElMessage.info(res.message);
+          return;
         }
+        ElMessage.success("修改管理员成功");
+        getData();
       }
       editVisible.value = false;
     };
@@ -291,22 +277,21 @@ export default {
       tableData,
       total,
       editVisible,
-      previewVisible,
       form,
-      searchContext,
-      previewRef,
+      name,
       moment,
+      showAvatarUrl,
       pageSizes,
-      filterHtml,
+      modelStatus,
       handleSearch,
       handlePageChange,
       handleDelete,
       handleEdit,
-      previewHandle,
       saveEdit,
       addNews,
       changeEditor,
       handleSizeChange,
+      changeImage,
     };
   },
 };

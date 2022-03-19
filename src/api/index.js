@@ -173,6 +173,13 @@ export const deleteDoctor = (data) => {
         data
     });
 };
+// 改变医生状态
+export const updateDoctorStatus = (data) => {
+    return request('/admin/changeDoctorStatus', {
+        method: 'put',
+        data
+    });
+};
 
 // 修改医生
 export const updateDoctor = (data) => {
@@ -185,6 +192,37 @@ export const updateDoctor = (data) => {
 // 查询医生
 export const getDoctor = (data) => {
     return request('/doctor', {
+        method: 'get',
+        data
+    });
+};
+
+// 添加管理员
+export const addAdmin = (data) => {
+    return request('/admin', {
+        method: 'post',
+        data
+    });
+};
+// 删除管理员
+export const deleteAdmin = (data) => {
+    return request('/admin', {
+        method: 'delete',
+        data
+    });
+};
+
+// 修改管理员
+export const updateAdmin = (data) => {
+    return request('/admin', {
+        method: 'put',
+        data
+    });
+};
+
+// 查询管理员
+export const getAdmin = (data) => {
+    return request('/admin', {
         method: 'get',
         data
     });

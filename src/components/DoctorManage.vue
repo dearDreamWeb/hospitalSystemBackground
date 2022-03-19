@@ -75,11 +75,32 @@
             </el-image>
           </template>
         </el-table-column>
+        <el-table-column prop="createTime" width="200" label="注册时间">
+          <template #default="scope">
+            {{ moment(scope.row.createTime).format("YYYY-MM-DD HH:mm:ss") }}
+          </template>
+        </el-table-column>
         <el-table-column
-          prop="createTime"
-          width="120"
-          label="注册时间"
-        ></el-table-column>
+          prop="status"
+          width="180"
+          label="状态"
+          align="center"
+          fixed="right"
+        >
+          <template #default="scope">
+            <el-check-tag
+              :checked="!scope.row.status"
+              @click="changeStatus(scope.row, scope.$index, 0)"
+              >工作中</el-check-tag
+            >
+            <el-check-tag
+              :checked="scope.row.status"
+              @click="changeStatus(scope.row, scope.$index, 1)"
+              style="margin-left: 12px"
+              >请假中</el-check-tag
+            >
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="scope">
             <el-button
@@ -206,6 +227,7 @@
 <script>
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import moment from "moment";
 import {
   addDoctor,
   deleteDoctor,
@@ -214,6 +236,7 @@ import {
   getDoctor,
   getSection,
   getOutpatient,
+  updateDoctorStatus,
 } from "../api/index";
 import AvatarUpload from "../components/AvatarUpload.vue";
 
@@ -326,6 +349,22 @@ export default {
       }
     };
 
+    /**
+     * 改变状态
+     */
+    const changeStatus = async (data, index, newStatus) => {
+      if (data.status === newStatus) {
+        return;
+      }
+      const res = await updateDoctorStatus({ id: data.id, stop: newStatus });
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
+      }
+      tableData.value[index].status = newStatus;
+      ElMessage.success("状态修改成功");
+    };
+
     const handleEdit = (index, row) => {
       const { sectionId } = row;
       modelStatus.value = 0;
@@ -376,6 +415,7 @@ export default {
       allSections,
       allOutpatient,
       allTechnical,
+      moment,
       handleSearch,
       handlePageChange,
       handleDelete,
@@ -384,6 +424,7 @@ export default {
       addDoctorHandle,
       sectionChange,
       changeImage,
+      changeStatus,
     };
   },
 };
