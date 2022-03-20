@@ -4,13 +4,12 @@ let test = 'http://192.168.31.98:8081/hospital';
 let test1 = 'http://hospital.liqiu.vip/hospital';
 let test2 = 'http://dockerhospital.liqiu.vip/hospital';
 
-// console.log(import.meta.env.MODE)
+console.log(import.meta.env.MODE)
 
 const instance = axios.create({
     baseURL: import.meta.env.MODE === 'production'
         ? import.meta.env.VITE_BASE_URL
         : test,
-    timeout: 5000
 })
 
 instance.interceptors.response.use(

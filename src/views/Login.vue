@@ -73,7 +73,6 @@ export default {
           if (!res.success) {
             ElMessage.info(res.message);
           }
-          console.log(res)
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("userInfo", JSON.stringify(res.data.userInfo));
           ElMessage.success("登录成功");
