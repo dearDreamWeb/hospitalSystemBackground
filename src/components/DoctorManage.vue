@@ -97,26 +97,27 @@
           fixed="right"
         >
           <template #default="scope">
+            <el-check-tag :checked="!isLeave(scope.row)">工作中</el-check-tag>
             <el-check-tag
-              :checked="!scope.row.status"
-              @click="changeStatus(scope.row, scope.$index, 0)"
-              >工作中</el-check-tag
-            >
-            <el-check-tag
-              :checked="scope.row.status"
-              @click="changeStatus(scope.row, scope.$index, 1)"
+              :checked="isLeave(scope.row)"
               style="margin-left: 12px"
               >请假中</el-check-tag
             >
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+        <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="scope">
             <el-button
               type="text"
               icon="el-icon-edit"
               @click="handleEdit(scope.$index, scope.row)"
               >编辑
+            </el-button>
+            <el-button
+              type="text"
+              icon="el-icon-edit"
+              @click="leaveHandle(scope.$index, scope.row)"
+              >请假
             </el-button>
             <el-button
               type="text"
@@ -239,6 +240,23 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog title="请假" v-model="leaveVisible" width="40%">
+      <div>请选择请假时间：</div>
+      <el-date-picker
+        v-model="leaveValue"
+        type="datetimerange"
+        range-separator="To"
+        start-placeholder="Start date"
+        end-placeholder="End date"
+      />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="leaveVisible = false">取 消</el-button>
+          <el-button type="primary" @click="leaveOk">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -266,6 +284,9 @@ export default {
       page: 1,
       pageSize: 10,
     });
+    const leaveVisible = ref(false);
+    const leaveDoctorData = ref({});
+    const leaveValue = ref([]);
     const name = ref("");
     const tableData = ref([]);
     const pageTotal = ref(0);
@@ -289,7 +310,7 @@ export default {
     const getData = async () => {
       const res = await getDoctor({ name: name.value, ...query });
       if (res.success) {
-        tableData.value = res.data.items;
+        tableData.value = [...res.data.items];
         pageTotal.value = res.data.total;
       }
     };
@@ -369,22 +390,6 @@ export default {
       }
     };
 
-    /**
-     * 改变状态
-     */
-    const changeStatus = async (data, index, newStatus) => {
-      if (data.status === newStatus) {
-        return;
-      }
-      const res = await updateDoctorStatus({ id: data.id, stop: newStatus });
-      if (!res.success) {
-        ElMessage.info(res.message);
-        return;
-      }
-      tableData.value[index].status = newStatus;
-      ElMessage.success("状态修改成功");
-    };
-
     const handleEdit = (index, row) => {
       const { sectionId } = row;
       modelStatus.value = 0;
@@ -393,6 +398,46 @@ export default {
       form.value = row;
       form.value.section = sectionId;
       avatarUrl.value = row.avatarUrl;
+    };
+
+    /**
+     * 是否请假
+     */
+    const isLeave = (data) => {
+      const { leavebTime, leaveeTime } = data;
+      if (!leavebTime || !leaveeTime) {
+        return false;
+      }
+      const currentTime = new Date().getTime() / 1000;
+      return currentTime >= leavebTime && currentTime <= leaveeTime;
+    };
+
+    /**
+     * 请假
+     */
+    const leaveHandle = (index, row) => {
+      leaveVisible.value = true;
+      leaveDoctorData.value = row;
+    };
+
+    /**
+     * 请假请求
+     */
+    const leaveOk = async () => {
+      const params = {
+        id: leaveDoctorData.value.id,
+        leavebTime: new Date(leaveValue.value[0]).getTime() / 1000,
+        leaveeTime: new Date(leaveValue.value[1]).getTime() / 1000,
+      };
+      const res = await updateDoctor(params);
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
+      }
+      getData();
+      ElMessage.success("请假成功");
+      leaveVisible.value = false;
+      leaveValue = [];
     };
 
     const saveEdit = async () => {
@@ -436,15 +481,20 @@ export default {
       allOutpatient,
       allTechnical,
       moment,
+      leaveVisible,
+      leaveDoctorData,
+      leaveValue,
       handleSearch,
       handlePageChange,
       handleDelete,
       handleEdit,
+      leaveHandle,
       saveEdit,
       addDoctorHandle,
       sectionChange,
       changeImage,
-      changeStatus,
+      leaveOk,
+      isLeave,
     };
   },
 };
