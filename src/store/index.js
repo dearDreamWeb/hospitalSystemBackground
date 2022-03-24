@@ -51,8 +51,12 @@ export default createStore({
         handleCollapse(state, data) {
             state.collapse = data;
         },
-        addUserInfo(state,data){
+        addUserInfo(state, data) {
             state.userInfo = data;
+        },
+        updateUserInfo(state, data) {
+            state.userInfo = data;
+            localStorage.setItem('userInfo',JSON.stringify(data))
         },
     },
     actions: {},

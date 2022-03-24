@@ -4,7 +4,8 @@
       <el-col :span="8">
         <el-card shadow="hover" class="mgb20" style="height: 252px">
           <div class="user-info">
-            <img src="../assets/img/img.jpg" class="user-avator" alt />
+            <img v-if="userInfoData.avatarUrl" :src="userInfoData.avatarUrl" class="user-avator" alt />
+            <img v-else src="../assets/img/img.jpg" class="user-avator" alt />
             <div class="user-info-cont">
               <div class="user-info-name">{{ name }}</div>
               <div>{{ role }}</div>
@@ -143,12 +144,14 @@ export default {
     const store = useStore();
     const name = ref("");
     const role = ref("");
+    const userInfoData = ref("");
 
     onMounted(() => {
       const { userInfo } = store.state;
       const type = userInfo.type;
       name.value = userInfo.name;
       role.value = type !== "ADMIN" ? "超级管理员" : "普通管理员";
+      userInfoData.value = userInfo;
     });
 
     const data = reactive([
@@ -252,6 +255,7 @@ export default {
     ]);
 
     return {
+      userInfoData,
       name,
       data,
       options,

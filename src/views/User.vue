@@ -9,14 +9,22 @@
             </div>
           </template>
           <div class="info">
-            <div class="info-image" @click="showDialog">
+            <div class="info-avatarBox">
+              <AvatarUpload
+                :imageUrl="showAvatarUrl || ''"
+                @changeImage="changeImage"
+              />
+            </div>
+            <!-- <div class="info-image" @click="showDialog">
               <img :src="avatarImg" />
               <span class="info-edit">
                 <i class="el-icon-lx-camerafill"></i>
               </span>
-            </div>
-            <div class="info-name">{{ name }}</div>
-            <div class="info-desc">不可能！我的代码怎么可能会有bug！</div>
+            </div> -->
+            <div class="info-name">{{ userInfoData.name }}</div>
+            <el-tag>{{
+              userInfoData.type === "SUPPER_ADMIN" ? "超级管理员" : "普通管理员"
+            }}</el-tag>
           </div>
         </el-card>
       </el-col>
@@ -28,15 +36,17 @@
             </div>
           </template>
           <el-form label-width="90px">
-            <el-form-item label="用户名："> {{ name }} </el-form-item>
+            <el-form-item label="用户名：">
+              {{ userInfoData.name }}
+            </el-form-item>
+            <el-form-item label="手机号：">
+              {{ userInfoData.phone }}
+            </el-form-item>
             <el-form-item label="旧密码：">
-              <el-input type="password" v-model="form.old"></el-input>
+              <el-input type="password" v-model="form.oldPwd"></el-input>
             </el-form-item>
             <el-form-item label="新密码：">
-              <el-input type="password" v-model="form.new"></el-input>
-            </el-form-item>
-            <el-form-item label="个人简介：">
-              <el-input v-model="form.desc"></el-input>
+              <el-input type="password" v-model="form.newPwd"></el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="onSubmit">保存</el-button>
@@ -80,30 +90,78 @@ import VueCropper from "vue-cropperjs";
 import "cropperjs/dist/cropper.css";
 import avatar from "../assets/img/img.jpg";
 import { useStore } from "vuex";
+import md5 from "md5";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { updateAdminSelf } from "../api/index";
+import AvatarUpload from "../components/AvatarUpload.vue";
+
 export default {
   name: "user",
   components: {
     VueCropper,
+    AvatarUpload,
   },
   setup() {
     const store = useStore();
-    const name = ref("");
-    const form = reactive({
-      old: "",
-      new: "",
-      desc: "不可能！我的代码怎么可能会有bug！",
+    const router = useRouter();
+    const form = ref({
+      oldPwd: "",
+      newPwd: "",
     });
-    const onSubmit = () => {};
+    const showAvatarUrl = ref("");
 
     const avatarImg = ref(avatar);
+    const userInfoData = ref("");
     const imgSrc = ref("");
     const cropImg = ref("");
     const dialogVisible = ref(false);
     const cropper = ref(null);
 
+    const onSubmit = async () => {
+      const { oldPwd, newPwd } = form.value;
+      if (userInfoData.value.pwd !== md5(oldPwd)) {
+        ElMessage.info("旧密码错误");
+        return;
+      }
+      if (!newPwd) {
+        ElMessage.info("新密码不能为空");
+        return;
+      }
+      const res = await updateAdminSelf({ ...userInfoData.value, pwd: newPwd });
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
+      }
+      ElMessage.success("修改密码成功，请重新登录");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
+      router.push("/login");
+    };
+
+    // 图片变更
+    const changeImage = async(data) => {
+      const { absolutePath, name } = data;
+      showAvatarUrl.value = absolutePath;
+      const res = await updateAdminSelf({
+        ...userInfoData.value,
+        avatarUrl: name,
+      });
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
+      }
+      ElMessage.success("修改头像成功");
+      store.commit("updateUserInfo", {
+        ...userInfoData.value,
+        avatarUrl: absolutePath,
+      });
+    };
+
     onMounted(() => {
       const { userInfo } = store.state;
-      name.value = userInfo.name;
+      userInfoData.value = userInfo;
+      showAvatarUrl.value = userInfo.avatarUrl;
     });
 
     const showDialog = () => {
@@ -135,11 +193,11 @@ export default {
     };
 
     return {
-      name,
       form,
       onSubmit,
       cropper,
       avatarImg,
+      userInfoData,
       imgSrc,
       cropImg,
       showDialog,
@@ -147,6 +205,8 @@ export default {
       setImage,
       cropImage,
       saveAvatar,
+      showAvatarUrl,
+      changeImage,
     };
   },
 };
@@ -156,6 +216,10 @@ export default {
 .info {
   text-align: center;
   padding: 35px 0;
+}
+.info-avatarBox {
+  display: flex;
+  justify-content: center;
 }
 .info-image {
   position: relative;

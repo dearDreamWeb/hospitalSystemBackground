@@ -9,7 +9,7 @@
     <div class="header-right">
       <div class="header-user-con">
         <!-- 消息中心 -->
-        <div class="btn-bell">
+        <!-- <div class="btn-bell">
           <el-tooltip
             effect="dark"
             :content="message ? `有${message}条未读消息` : `消息中心`"
@@ -20,25 +20,25 @@
             </router-link>
           </el-tooltip>
           <span class="btn-bell-badge" v-if="message"></span>
-        </div>
+        </div> -->
         <!-- 用户头像 -->
         <div class="user-avator">
-          <img src="../assets/img/img.jpg" />
+          <img v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" />
+          <img v-else src="../assets/img/img.jpg" />
         </div>
         <!-- 用户名下拉菜单 -->
         <el-dropdown class="user-name" trigger="click" @command="handleCommand">
           <span class="el-dropdown-link">
-            {{ username }}
+            {{ userInfo.name }}
             <i class="el-icon-caret-bottom"></i>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <a
-                href="https://github.com/lin-xin/vue-manage-system"
-                target="_blank"
+              <el-dropdown-item
+                command="admin"
+                v-if="userInfo.type === 'SUPPER_ADMIN'"
+                >管理管理员</el-dropdown-item
               >
-                <el-dropdown-item>项目仓库</el-dropdown-item>
-              </a>
               <el-dropdown-item command="user">个人中心</el-dropdown-item>
               <el-dropdown-item divided command="loginout"
                 >退出登录</el-dropdown-item
@@ -51,13 +51,13 @@
   </div>
 </template>
 <script>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+
 export default {
   setup() {
-    const username = "www";
-    const message = 2;
+    const userInfo = ref({});
 
     const store = useStore();
     const collapse = computed(() => store.state.collapse);
@@ -66,14 +66,23 @@ export default {
       store.commit("handleCollapse", !collapse.value);
     };
 
+    watch(
+      () => store.state.userInfo,
+      (val) => {
+        userInfo.value = val;
+      }
+    );
+
     onMounted(() => {
       if (document.body.clientWidth < 1500) {
         collapseChage();
       }
-      const userInfo = localStorage.getItem("userInfo")
+
+      const userInfoData = localStorage.getItem("userInfo")
         ? JSON.parse(localStorage.getItem("userInfo"))
         : {};
-      store.commit("addUserInfo", userInfo);
+      userInfo.value = userInfoData;
+      store.commit("addUserInfo", userInfoData);
     });
 
     // 用户名下拉菜单选择事件
@@ -85,12 +94,13 @@ export default {
         router.push("/login");
       } else if (command == "user") {
         router.push("/user");
+      } else if (command == "admin") {
+        router.push("/admin");
       }
     };
 
     return {
-      username,
-      message,
+      userInfo,
       collapse,
       collapseChage,
       handleCommand,

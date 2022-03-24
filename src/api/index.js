@@ -228,3 +228,11 @@ export const getAdmin = (data) => {
     });
 };
 
+// 管理员修改自己信息
+export const updateAdminSelf = (data) => {
+    return request('/admin/updateAdmin', {
+        method: 'put',
+        data
+    });
+};
+
