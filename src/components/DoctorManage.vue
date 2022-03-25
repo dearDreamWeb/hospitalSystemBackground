@@ -241,14 +241,21 @@
       </template>
     </el-dialog>
 
+    <!-- 请假弹窗 -->
     <el-dialog title="请假" v-model="leaveVisible" width="40%">
-      <div>请选择请假时间：</div>
+      <div class="leaveInfo">
+        <div class="leaveInfo-item">姓名<i class="el-icon-lx-people"></i>：{{ leaveDoctorData.name }}</div>
+        <div class="leaveInfo-item">
+          目前状态<i class="el-icon-lx-tag"></i>：{{ isLeave(leaveDoctorData) ? "请假中" : "工作中" }}
+        </div>
+      </div>
+      <div class="chooseTime">请选择请假时间<i class="el-icon-lx-time"></i>：</div>
       <el-date-picker
         v-model="leaveValue"
         type="datetimerange"
         range-separator="To"
-        start-placeholder="Start date"
-        end-placeholder="End date"
+        start-placeholder="开始时间"
+        end-placeholder="结束时间"
       />
       <template #footer>
         <span class="dialog-footer">
@@ -532,5 +539,16 @@ export default {
 
 .el-form-item {
   margin: 12px 0;
+}
+.leaveInfo {
+  font-size: 14px;
+}
+.leaveInfo-item {
+  margin-bottom: 12px;
+}
+.chooseTime {
+  font-size: 18px;
+  margin: 20px 0 12px 0;
+  color: rgb(23, 117, 113);
 }
 </style>

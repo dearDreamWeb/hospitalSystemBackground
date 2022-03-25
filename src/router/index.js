@@ -53,6 +53,13 @@ const routes = [
                 },
                 component: () => import( /* webpackChunkName: "table" */ "../views/Admin.vue")
             }, {
+                path: "/adminUser",
+                name: "adminUser",
+                meta: {
+                    title: '用户管理'
+                },
+                component: () => import( /* webpackChunkName: "table" */ "../views/AdminUser.vue")
+            }, {
                 path: "/charts",
                 name: "basecharts",
                 meta: {

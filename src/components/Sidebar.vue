@@ -62,12 +62,7 @@ export default {
         title: "系统首页",
       },
       {
-        icon: "el-icon-lx-cascades",
-        index: "/table",
-        title: "基础表格",
-      },
-      {
-        icon: "el-icon-lx-cascades",
+        icon: "el-icon-lx-group",
         index: "/doctors",
         title: "医生管理",
       },
@@ -77,14 +72,24 @@ export default {
         title: "科室管理",
       },
       {
-        icon: "el-icon-lx-cascades",
+        icon: "el-icon-lx-attention",
         index: "/news",
         title: "新闻管理",
       },
       {
-        icon: "el-icon-lx-cascades",
+        icon: "el-icon-lx-people",
+        index: "/adminUser",
+        title: "用户管理",
+      },
+      {
+        icon: "el-icon-lx-crown",
         index: "/admin",
         title: "管理员管理",
+      },
+      {
+        icon: "el-icon-lx-cascades",
+        index: "/table",
+        title: "基础表格",
       },
       {
         icon: "el-icon-lx-copy",
@@ -154,8 +159,8 @@ export default {
 
     onMounted(() => {
       const { userInfo } = store.state;
-      if(userInfo.type !== "SUPPER_ADMIN"){
-          items.value = items.value.filter((item)=> item.index!=='/admin')
+      if (userInfo.type !== "SUPPER_ADMIN") {
+        items.value = items.value.filter((item) => item.index !== "/admin");
       }
     });
 

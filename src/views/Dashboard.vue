@@ -4,7 +4,12 @@
       <el-col :span="8">
         <el-card shadow="hover" class="mgb20" style="height: 252px">
           <div class="user-info">
-            <img v-if="userInfoData.avatarUrl" :src="userInfoData.avatarUrl" class="user-avator" alt />
+            <img
+              v-if="userInfoData.avatarUrl"
+              :src="userInfoData.avatarUrl"
+              class="user-avator"
+              alt
+            />
             <img v-else src="../assets/img/img.jpg" class="user-avator" alt />
             <div class="user-info-cont">
               <div class="user-info-name">{{ name }}</div>
@@ -12,12 +17,23 @@
             </div>
           </div>
           <div class="user-info-list">
-            上次登录时间：
-            <span>2019-11-01</span>
+            本次登录地点：
+            <span>{{ cityInfo }}</span>
           </div>
           <div class="user-info-list">
-            上次登录地点：
-            <span>东莞</span>
+            天气信息：
+            <div class="user-info-list-item">
+              <span>{{ weatherInfo.temperature }}度</span>
+              <span>{{ weatherInfo.weather }}</span>
+            </div>
+            <div class="user-info-list-item">
+              <span
+                >{{ weatherInfo.winddirection }}风 风力{{
+                  weatherInfo.windpower
+                }}</span
+              >
+              <span>湿度{{ weatherInfo.humidity }}%</span>
+            </div>
           </div>
         </el-card>
         <el-card shadow="hover" style="height: 252px">
@@ -137,6 +153,8 @@
 import Schart from "vue-schart";
 import { reactive, ref, onMounted } from "vue";
 import { useStore } from "vuex";
+import { queryWeatherInfo } from "../api/index";
+
 export default {
   name: "dashboard",
   components: { Schart },
@@ -145,6 +163,8 @@ export default {
     const name = ref("");
     const role = ref("");
     const userInfoData = ref("");
+    const cityInfo = ref("");
+    const weatherInfo = ref({});
 
     onMounted(() => {
       const { userInfo } = store.state;
@@ -152,7 +172,31 @@ export default {
       name.value = userInfo.name;
       role.value = type !== "ADMIN" ? "超级管理员" : "普通管理员";
       userInfoData.value = userInfo;
+
+      getWeatherInfo();
     });
+
+    // 天气信息
+    const getWeatherInfo = async () => {
+      const res = await queryWeatherInfo();
+      const {
+        province,
+        city,
+        temperature,
+        weather,
+        winddirection,
+        windpower,
+        humidity,
+      } = res;
+      cityInfo.value = `${province}-${city}`;
+      weatherInfo.value = {
+        temperature,
+        weather,
+        winddirection,
+        windpower,
+        humidity,
+      };
+    };
 
     const data = reactive([
       {
@@ -262,6 +306,8 @@ export default {
       options2,
       todoList,
       role,
+      cityInfo,
+      weatherInfo,
     };
   },
 };
@@ -350,6 +396,7 @@ export default {
 }
 
 .user-info-list {
+  display: flex;
   font-size: 14px;
   color: #999;
   line-height: 25px;
@@ -357,6 +404,12 @@ export default {
 
 .user-info-list span {
   margin-left: 70px;
+}
+.user-info-list-item {
+  display: flex;
+}
+.user-info-list-item span {
+  margin-left: 8px;
 }
 
 .mgb20 {

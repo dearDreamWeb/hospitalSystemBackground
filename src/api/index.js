@@ -1,4 +1,5 @@
 import request from '../utils/request';
+import axios from 'axios';
 
 export const fetchData = query => {
     return request('./table.json', {
@@ -235,4 +236,26 @@ export const updateAdminSelf = (data) => {
         data
     });
 };
+
+/**
+ * 获取天气信息
+ * @returns 
+ */
+export const queryWeatherInfo = () => {
+
+    return new Promise(async (resolve, reject) => {
+        const res = await axios.get('https://restapi.amap.com/v3/ip?key=1170cb4cf4ddb5c7e7a95c2e833383d2');
+        if (res.data.status !== '1') {
+            reject('获取ip地址失败');
+            return;
+        }
+        axios.get(`https://restapi.amap.com/v3/weather/weatherInfo?key=1170cb4cf4ddb5c7e7a95c2e833383d2&city=${res.data.adcode}`).then((res) => {
+            if (res.data.status === '1') {
+                resolve(res.data.lives[0])
+                return;
+            }
+            
+        })
+    })
+}
 
