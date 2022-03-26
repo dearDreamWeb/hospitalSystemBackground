@@ -83,6 +83,11 @@ export default {
       },
       {
         icon: "el-icon-lx-crown",
+        index: "/appointment",
+        title: "预约管理",
+      },
+      {
+        icon: "el-icon-lx-crown",
         index: "/admin",
         title: "管理员管理",
       },

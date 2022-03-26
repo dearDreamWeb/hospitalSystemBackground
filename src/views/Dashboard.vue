@@ -23,14 +23,14 @@
           <div class="user-info-list">
             天气信息：
             <div class="user-info-list-item">
-              <span>{{ weatherInfo.temperature }}度</span>
+              <span>{{ weatherInfo.temperature }}℃</span>
               <span>{{ weatherInfo.weather }}</span>
             </div>
             <div class="user-info-list-item">
               <span
                 >{{ weatherInfo.winddirection }}风 风力{{
                   weatherInfo.windpower
-                }}</span
+                }}级</span
               >
               <span>湿度{{ weatherInfo.humidity }}%</span>
             </div>

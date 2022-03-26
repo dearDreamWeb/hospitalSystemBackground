@@ -10,7 +10,7 @@ console.log(import.meta.env.MODE)
 const instance = axios.create({
     baseURL: import.meta.env.MODE === 'production'
         ? import.meta.env.VITE_BASE_URL
-        : test2,
+        : test0
 })
 
 instance.interceptors.response.use(

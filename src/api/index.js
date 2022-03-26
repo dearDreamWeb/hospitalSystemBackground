@@ -237,6 +237,14 @@ export const updateAdminSelf = (data) => {
     });
 };
 
+// 预约查询
+export const queryReserve = (data) => {
+    return request('/reserve/query', {
+        method: 'get',
+        data
+    });
+};
+
 /**
  * 获取天气信息
  * @returns 
