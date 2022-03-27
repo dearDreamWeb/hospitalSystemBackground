@@ -57,8 +57,10 @@
               <div class="grid-content grid-con-1">
                 <i class="el-icon-user-solid grid-con-icon"></i>
                 <div class="grid-cont-right">
-                  <div class="grid-num">1234</div>
-                  <div>用户访问量</div>
+                  <div class="grid-num">
+                    {{ statisticsInfo.userTotal || 0 }}
+                  </div>
+                  <div>用户人数</div>
                 </div>
               </div>
             </el-card>
@@ -68,8 +70,10 @@
               <div class="grid-content grid-con-2">
                 <i class="el-icon-message-solid grid-con-icon"></i>
                 <div class="grid-cont-right">
-                  <div class="grid-num">321</div>
-                  <div>系统消息</div>
+                  <div class="grid-num">
+                    {{ statisticsInfo.doctorTotal || 0 }}
+                  </div>
+                  <div>医生人数</div>
                 </div>
               </div>
             </el-card>
@@ -79,8 +83,8 @@
               <div class="grid-content grid-con-3">
                 <i class="el-icon-s-goods grid-con-icon"></i>
                 <div class="grid-cont-right">
-                  <div class="grid-num">5000</div>
-                  <div>数量</div>
+                  <div class="grid-num">{{ statisticsInfo.reserveTotal || 0 }}</div>
+                  <div>预约单数</div>
                 </div>
               </div>
             </el-card>
@@ -153,7 +157,7 @@
 import Schart from "vue-schart";
 import { reactive, ref, onMounted } from "vue";
 import { useStore } from "vuex";
-import { queryWeatherInfo } from "../api/index";
+import { queryWeatherInfo, getStatisticsInfo } from "../api/index";
 
 export default {
   name: "dashboard",
@@ -165,6 +169,7 @@ export default {
     const userInfoData = ref("");
     const cityInfo = ref("");
     const weatherInfo = ref({});
+    const statisticsInfo = ref({});
 
     onMounted(() => {
       const { userInfo } = store.state;
@@ -174,6 +179,7 @@ export default {
       userInfoData.value = userInfo;
 
       getWeatherInfo();
+      getStatisticsInfoHandle();
     });
 
     // 天气信息
@@ -196,6 +202,14 @@ export default {
         windpower,
         humidity,
       };
+    };
+
+    const getStatisticsInfoHandle = async () => {
+      const res = await getStatisticsInfo();
+      if (!res.success) {
+        return;
+      }
+      statisticsInfo.value = res.data;
     };
 
     const data = reactive([
@@ -308,6 +322,8 @@ export default {
       role,
       cityInfo,
       weatherInfo,
+      statisticsInfo,
+      getStatisticsInfoHandle,
     };
   },
 };

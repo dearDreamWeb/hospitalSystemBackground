@@ -5,18 +5,16 @@
         <div class="container">
           <div class="handle-box">
             <el-input
-              v-model="name"
+              v-model="query.name"
               placeholder="请输入搜索名称或手机号"
               class="handle-input mr10"
+              clearable
             ></el-input>
             <el-button
               type="primary"
               icon="el-icon-search"
               @click="handleSearch"
               >搜索</el-button
-            >
-            <el-button type="primary" icon="el-icon-plus" @click="addNews"
-              >新增管理员</el-button
             >
           </div>
           <el-table
@@ -35,12 +33,27 @@
             <el-table-column
               min-width="100"
               prop="name"
-              label="名称"
+              label="名字"
             ></el-table-column>
+            <el-table-column
+              min-width="50"
+              prop="sex"
+              label="性别"
+            ></el-table-column>
+            <el-table-column min-width="100" prop="balance" label="余额">
+              <template #default="scope">
+                ￥{{ scope.row.balance }}
+              </template></el-table-column
+            >
             <el-table-column
               width="180"
               prop="phone"
               label="手机号码"
+            ></el-table-column>
+            <el-table-column
+              width="50"
+              prop="age"
+              label="年龄"
             ></el-table-column>
             <el-table-column width="150" label="头像(查看大图)" align="center">
               <template #default="scope">
@@ -111,10 +124,16 @@
           <el-input v-model="form.name"></el-input>
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input v-model="form.phone"></el-input>
+          <el-input v-model="form.phone" disabled></el-input>
         </el-form-item>
-        <el-form-item label="密码" v-if="modelStatus === 0">
-          <el-input v-model="form.pwd" type="password" show-password></el-input>
+        <el-form-item label="年龄">
+          <el-input v-model="form.age"></el-input>
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-radio-group v-model="form.sex">
+            <el-radio label="男" value="男"></el-radio>
+            <el-radio label="女" value="女"></el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="头像" class="form-avatar">
           <AvatarUpload
@@ -138,11 +157,10 @@ import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
 import {
-  getAdmin,
+  queryUsers,
   deleteAdmin,
-  addAdmin,
-  updateAdmin,
-  queryWeatherInfo,
+  updateUserInfo,
+  deleteUserInfo,
 } from "../api/index";
 import AvatarUpload from "../components/AvatarUpload.vue";
 
@@ -151,11 +169,11 @@ export default {
   components: { AvatarUpload },
   setup() {
     const pageSizes = reactive([10, 20, 50, 100]);
-    let query = reactive({
+    let query = ref({
       page: 1,
       pageSize: pageSizes[0],
+      name: "",
     });
-    const name = ref("");
     const tableData = ref([]);
     const total = ref(0);
     let form = ref({
@@ -164,11 +182,9 @@ export default {
       phone: "",
       avatarUrl: "",
     });
-    const modelStatus = ref(0); // 0: 新增 1：编辑
     // 表格编辑时弹窗和保存
     const editVisible = ref(false);
     const showAvatarUrl = ref("");
-
 
     onMounted(() => {
       getData();
@@ -176,11 +192,7 @@ export default {
 
     // 获取表格数据
     const getData = async () => {
-      const params = {
-        page: query.page,
-        pageSize: query.pageSize,
-      };
-      const res = await getAdmin({ ...params, name: name.value });
+      const res = await queryUsers({ ...query.value });
       if (!res.success) {
         ElMessage.info(res.message);
         return;
@@ -188,22 +200,13 @@ export default {
       const { items, page, pageSize } = res.data;
       tableData.value = items;
       total.value = res.data.total;
-      query = { ...query, page, pageSize };
+      query.value = { ...query.value, page, pageSize };
     };
 
     // 查询操作
     const handleSearch = () => {
-      query = { ...query, page: 1 };
-      console.log(query);
+      query.value = { ...query.value, page: 1 };
       getData();
-    };
-
-    // 新增新闻
-    const addNews = () => {
-      editVisible.value = true;
-      modelStatus.value = 0;
-      form.value = {};
-      showAvatarUrl.value = "";
     };
 
     // 图片变更
@@ -215,13 +218,13 @@ export default {
 
     // 分页导航
     const handlePageChange = (val) => {
-      query.page = val;
+      query.value.page = val;
       getData();
     };
 
     // 分页导航
     const handleSizeChange = (val) => {
-      query.pageSize = val;
+      query.value.pageSize = val;
       getData();
     };
 
@@ -232,7 +235,7 @@ export default {
         type: "warning",
       })
         .then(async () => {
-          const res = await deleteAdmin(row.id);
+          const res = await deleteUserInfo(row.id);
           if (res.success) {
             ElMessage.success("删除成功");
             getData();
@@ -241,17 +244,11 @@ export default {
         .catch(() => {});
     };
 
-    // 富文本编辑器内容改变时
-    const changeEditor = (data) => {
-      form.value.content = data;
-    };
-
     /**
      * 编辑
      */
     const handleEdit = (index, row) => {
       form.value = row;
-      modelStatus.value = 1;
       editVisible.value = true;
       showAvatarUrl.value = form.value.avatarUrl;
     };
@@ -260,22 +257,13 @@ export default {
      * 保存
      */
     const saveEdit = async () => {
-      const { id, title, content } = form.value;
-      if (modelStatus.value === 0) {
-        const res = await addAdmin({ ...form.value });
-        if (res.success) {
-          ElMessage.success("新增管理员成功");
-          getData();
-        }
-      } else {
-        const res = await updateAdmin({ ...form.value });
-        if (!res.success) {
-          ElMessage.info(res.message);
-          return;
-        }
-        ElMessage.success("修改管理员成功");
-        getData();
+      const res = await updateUserInfo({ ...form.value });
+      if (!res.success) {
+        ElMessage.info(res.message);
+        return;
       }
+      ElMessage.success("修改用户成功成功");
+      getData();
       editVisible.value = false;
     };
 
@@ -285,18 +273,14 @@ export default {
       total,
       editVisible,
       form,
-      name,
       moment,
       showAvatarUrl,
       pageSizes,
-      modelStatus,
       handleSearch,
       handlePageChange,
       handleDelete,
       handleEdit,
       saveEdit,
-      addNews,
-      changeEditor,
       handleSizeChange,
       changeImage,
     };

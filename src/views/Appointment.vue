@@ -79,10 +79,15 @@
                 ￥{{ scope.row.reserveMoney }}
               </template>
             </el-table-column>
+            <el-table-column
+              min-width="120"
+              prop="phone"
+              label="预约手机号"
+            ></el-table-column>
             <el-table-column width="150" prop="status" label="预约状态">
               <template #default="scope">
                 <el-tag v-if="scope.row.status === 0" type="danger"
-                  >预约失败</el-tag
+                  >取消预约</el-tag
                 >
                 <el-tag v-else type="success">预约成功</el-tag>
               </template>
@@ -144,13 +149,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
-import {
-  getAdmin,
-  deleteAdmin,
-  addAdmin,
-  updateAdmin,
-  queryReserve,
-} from "../api/index";
+import { deleteAdmin, updateReserve, queryReserve } from "../api/index";
 
 export default {
   name: "appointment",
@@ -179,7 +178,7 @@ export default {
         value: 1,
       },
       {
-        label: "预约失败",
+        label: "取消预约",
         value: 0,
       },
     ];
@@ -240,13 +239,18 @@ export default {
     // 删除操作
     const handleDelete = (index, row) => {
       // 二次确认删除
-      ElMessageBox.confirm("确定要删除吗？", "提示", {
+      ElMessageBox.confirm("确定要取消预约吗？", "提示", {
         type: "warning",
       })
         .then(async () => {
-          const res = await deleteAdmin(row.id);
+          const res = await updateReserve({
+            id: row.id,
+            status: 0,
+            reserveMoney: row.reserveMoney,
+            phone: row.phone,
+          });
           if (res.success) {
-            ElMessage.success("删除成功");
+            ElMessage.success("取消预约成功");
             getData();
           }
         })

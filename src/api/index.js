@@ -245,6 +245,46 @@ export const queryReserve = (data) => {
     });
 };
 
+// 预约更新
+export const updateReserve = (data) => {
+    return request('/reserve/update', {
+        method: 'post',
+        data
+    });
+};
+
+// 查询用户
+export const queryUsers = (data) => {
+    return request('/admin/userList', {
+        method: 'get',
+        data
+    });
+};
+
+// 修改用户
+export const updateUserInfo = (data) => {
+    return request('/admin/userInfo', {
+        method: 'put',
+        data
+    });
+};
+
+// 获取统计信息
+export const getStatisticsInfo = (data) => {
+    return request('/common/getStatisticsInfo', {
+        method: 'get',
+        data
+    });
+};
+
+// 删除用户
+export const deleteUserInfo = (data) => {
+    return request('/admin/userInfo', {
+        method: 'delete',
+        data
+    });
+};
+
 /**
  * 获取天气信息
  * @returns 
