@@ -285,6 +285,14 @@ export const deleteUserInfo = (data) => {
     });
 };
 
+// 消费查询
+export const queryRechargeHistory = (data) => {
+    return request('/admin/recharge', {
+        method: 'get',
+        data
+    });
+};
+
 /**
  * 获取天气信息
  * @returns 
