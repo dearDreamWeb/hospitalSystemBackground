@@ -39,15 +39,17 @@
         <el-card shadow="hover" style="height: 252px">
           <template #header>
             <div class="clearfix">
-              <span>语言详情</span>
+              <span>预约排行</span>
             </div>
           </template>
-          Vue
-          <el-progress :percentage="71.3" color="#42b983"></el-progress
-          >JavaScript
-          <el-progress :percentage="24.1" color="#f1e05a"></el-progress>CSS
-          <el-progress :percentage="13.7"></el-progress>HTML
-          <el-progress :percentage="5.9" color="#f56c6c"></el-progress>
+          <div v-for="(item, index) in reserveList" :key="item.doctorId">
+            {{ item.name }} {{ item.outpatientName }}
+            {{ item.technical }} 预约数量：{{ item.total }}
+            <el-progress
+              :percentage="(item.total / reserveList[0].total) * 100"
+              :color="colorArr[index]"
+            ></el-progress>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="16">
@@ -83,7 +85,9 @@
               <div class="grid-content grid-con-3">
                 <i class="el-icon-s-goods grid-con-icon"></i>
                 <div class="grid-cont-right">
-                  <div class="grid-num">{{ statisticsInfo.reserveTotal || 0 }}</div>
+                  <div class="grid-num">
+                    {{ statisticsInfo.reserveTotal || 0 }}
+                  </div>
                   <div>预约单数</div>
                 </div>
               </div>
@@ -131,12 +135,7 @@
     <el-row :gutter="20">
       <el-col :span="12">
         <el-card shadow="hover">
-          <schart
-            ref="bar"
-            class="schart"
-            canvasId="bar"
-            :options="options"
-          ></schart>
+          <schart class="schart" canvasId="pie" :options="options3"></schart>
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -157,7 +156,13 @@
 import Schart from "vue-schart";
 import { reactive, ref, onMounted } from "vue";
 import { useStore } from "vuex";
-import { queryWeatherInfo, getStatisticsInfo } from "../api/index";
+import {
+  queryWeatherInfo,
+  getStatisticsInfo,
+  getDoctorReserveTotal,
+  queryRechargeHistory,
+  getSignUp,
+} from "../api/index";
 
 export default {
   name: "dashboard",
@@ -170,6 +175,39 @@ export default {
     const cityInfo = ref("");
     const weatherInfo = ref({});
     const statisticsInfo = ref({});
+    const reserveList = ref([]);
+    const colorArr = ["#42b983", "#42b983", "#f1e05a", "#f56c6c", "#e4393c"];
+
+    const options2 = ref({
+      type: "line",
+      title: {
+        text: "2022年用户每月注册量",
+      },
+      labels: [],
+      datasets: [
+        {
+          label: "用户注册量",
+          data: [],
+        },
+      ],
+    });
+
+    const options3 = ref({
+      type: "pie",
+      title: {
+        text: "收入和消费",
+      },
+      legend: {
+        position: "left",
+      },
+      bgColor: "#fbfbfb",
+      labels: ["收入", "消费"],
+      datasets: [
+        {
+          data: [0, 0],
+        },
+      ],
+    });
 
     onMounted(() => {
       const { userInfo } = store.state;
@@ -180,6 +218,9 @@ export default {
 
       getWeatherInfo();
       getStatisticsInfoHandle();
+      getDoctorReserveTotalHandle();
+      queryRechargeHistoryHandle();
+      getSignUpHandle();
     });
 
     // 天气信息
@@ -210,6 +251,47 @@ export default {
         return;
       }
       statisticsInfo.value = res.data;
+    };
+
+    const queryRechargeHistoryHandle = async () => {
+      const res = await queryRechargeHistory({ page: 1, pageSize: 10000000 });
+      let allIncrease = 0;
+      let allReduce = 0;
+      if (!res.success) {
+        return;
+      }
+      res.data.items.forEach((item) => {
+        if (item.name === "成功充值") {
+          allIncrease += item.price;
+        } else if (item.name === "成功预约") {
+          allReduce += item.price;
+        }
+      });
+      options3.value.datasets[0].data = [allIncrease, -allReduce];
+    };
+
+    const getSignUpHandle = async () => {
+      const res = await getSignUp();
+      if (!res.success) {
+        return;
+      }
+      const labelArr = [];
+      const dataArr = [];
+      res.data.forEach((item, index) => {
+        const newIndex = Number(item.monthName.split("月")[0]);
+        labelArr[newIndex - 1] = item.monthName;
+        dataArr[newIndex - 1] = item.signUpTotal;
+      });
+      options2.value.labels = labelArr;
+      options2.value.datasets[0].data = dataArr;
+    };
+
+    const getDoctorReserveTotalHandle = async () => {
+      const res = await getDoctorReserveTotal();
+      if (!res.success) {
+        return;
+      }
+      reserveList.value = res.data;
     };
 
     const data = reactive([
@@ -264,27 +346,7 @@ export default {
         },
       ],
     };
-    const options2 = {
-      type: "line",
-      title: {
-        text: "最近几个月各品类销售趋势图",
-      },
-      labels: ["6月", "7月", "8月", "9月", "10月"],
-      datasets: [
-        {
-          label: "家电",
-          data: [234, 278, 270, 190, 230],
-        },
-        {
-          label: "百货",
-          data: [164, 178, 150, 135, 160],
-        },
-        {
-          label: "食品",
-          data: [74, 118, 200, 235, 90],
-        },
-      ],
-    };
+
     const todoList = reactive([
       {
         title: "今天要修复100个bug",
@@ -318,11 +380,14 @@ export default {
       data,
       options,
       options2,
+      options3,
       todoList,
       role,
       cityInfo,
       weatherInfo,
       statisticsInfo,
+      reserveList,
+      colorArr,
       getStatisticsInfoHandle,
     };
   },

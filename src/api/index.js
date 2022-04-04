@@ -309,6 +309,30 @@ export const deleteComment = (data) => {
     });
 };
 
+// 查询日志
+export const queryLogs = (data) => {
+    return request('/admin/getOperationLog', {
+        method: 'get',
+        data
+    });
+};
+
+// 预约排行榜
+export const getDoctorReserveTotal = (data) => {
+    return request('/admin/getDoctorReserveTotal', {
+        method: 'get',
+        data
+    });
+};
+
+// 用户注册
+export const getSignUp = (data) => {
+    return request('/admin/getSignUp', {
+        method: 'get',
+        data
+    });
+};
+
 /**
  * 获取天气信息
  * @returns 

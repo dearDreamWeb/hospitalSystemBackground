@@ -82,17 +82,17 @@ export default {
         title: "用户管理",
       },
       {
-        icon: "el-icon-lx-crown",
+        icon: "el-icon-lx-text",
         index: "/appointment",
         title: "预约管理",
       },
       {
-        icon: "el-icon-lx-crown",
+        icon: "el-icon-lx-rank",
         index: "/rechargeHistory",
         title: "消费记录",
       },
       {
-        icon: "el-icon-lx-crown",
+        icon: "el-icon-lx-comment",
         index: "/comment",
         title: "评论管理",
       },
@@ -102,20 +102,20 @@ export default {
         title: "管理员管理",
       },
       {
-        icon: "el-icon-lx-crown",
+        icon: "el-icon-lx-sort",
         index: "/logs",
         title: "日志记录",
       },
-      {
-        icon: "el-icon-lx-emoji",
-        index: "/icon",
-        title: "自定义图标",
-      },
-      {
-        icon: "el-icon-pie-chart",
-        index: "/charts",
-        title: "schart图表",
-      },
+      // {
+      //   icon: "el-icon-lx-emoji",
+      //   index: "/icon",
+      //   title: "自定义图标",
+      // },
+      // {
+      //   icon: "el-icon-pie-chart",
+      //   index: "/charts",
+      //   title: "schart图表",
+      // },
     ];
     const items = ref(data);
     const route = useRoute();

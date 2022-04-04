@@ -3,20 +3,6 @@
     <el-tabs model-value="logs" class="demo-tabs">
       <el-tab-pane label="评论管理" name="logs">
         <div class="container">
-          <div class="handle-box">
-            <el-input
-              v-model="query.name"
-              placeholder="请输入搜索医生名字或者患者名字"
-              class="handle-input mr10"
-              clearable
-            ></el-input>
-            <el-button
-              type="primary"
-              icon="el-icon-search"
-              @click="handleSearch"
-              >搜索</el-button
-            >
-          </div>
           <el-table
             :data="tableData"
             border
@@ -31,55 +17,19 @@
               align="center"
             ></el-table-column>
             <el-table-column
-              min-width="100"
+              min-width="20"
               prop="userName"
-              label="患者名字"
+              label="操作人"
             ></el-table-column>
             <el-table-column
               min-width="100"
-              prop="doctorName"
-              label="医生名字"
-            ></el-table-column>
-      
-            <el-table-column
-              width="80"
-              prop="grade"
-              label="评分"
-            ></el-table-column>
-            <el-table-column
-              min-width="180"
-              prop="msg"
-              label="评论内容"
+              prop="requestPath"
+              label="操作接口"
             ></el-table-column>
 
             <el-table-column width="200" prop="createTime" label="创建时间">
               <template #default="scope">
                 {{ moment(scope.row.createTime).format("YYYY-MM-DD HH:mm:ss") }}
-              </template>
-            </el-table-column>
-            <el-table-column width="200" prop="updateTime" label="更新时间">
-              <template #default="scope">
-                {{
-                  moment(scope.row.updateTime || scope.row.createTime).format(
-                    "YYYY-MM-DD HH:mm:ss"
-                  )
-                }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              width="200"
-              label="操作"
-              align="center"
-              fixed="right"
-            >
-              <template #default="scope">
-                <el-button
-                  type="text"
-                  icon="el-icon-delete"
-                  class="red"
-                  @click="handleDelete(scope.$index, scope.row)"
-                  >删除</el-button
-                >
               </template>
             </el-table-column>
           </el-table>
@@ -104,17 +54,14 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
-import {
-  adminGetAllMessage,
-  deleteComment,
-} from "../api/index";
+import { queryLogs } from "../api/index";
 import AvatarUpload from "../components/AvatarUpload.vue";
 
 export default {
   name: "logs",
   components: { AvatarUpload },
   setup() {
-    const pageSizes = reactive([10, 20, 50, 100]);
+    const pageSizes = reactive([20, 50, 100]);
     let query = ref({
       page: 1,
       pageSize: pageSizes[0],
@@ -129,7 +76,7 @@ export default {
 
     // 获取表格数据
     const getData = async () => {
-      const res = await adminGetAllMessage({ ...query.value });
+      const res = await queryLogs({ ...query.value });
       if (!res.success) {
         ElMessage.info(res.message);
         return;
@@ -138,12 +85,6 @@ export default {
       tableData.value = items;
       total.value = res.data.total;
       query.value = { ...query.value, page, pageSize };
-    };
-
-    // 查询操作
-    const handleSearch = () => {
-      query.value = { ...query.value, page: 1 };
-      getData();
     };
 
     // 分页导航
@@ -158,31 +99,13 @@ export default {
       getData();
     };
 
-    // 删除操作
-    const handleDelete = (index, row) => {
-      // 二次确认删除
-      ElMessageBox.confirm("确定要删除吗？", "提示", {
-        type: "warning",
-      })
-        .then(async () => {
-          const res = await deleteComment(row.id);
-          if (res.success) {
-            ElMessage.success("删除成功");
-            getData();
-          }
-        })
-        .catch(() => {});
-    };
-
     return {
       query,
       tableData,
       total,
       moment,
       pageSizes,
-      handleSearch,
       handlePageChange,
-      handleDelete,
       handleSizeChange,
     };
   },
