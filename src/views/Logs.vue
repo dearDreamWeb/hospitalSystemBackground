@@ -61,7 +61,7 @@ export default {
   name: "logs",
   components: { AvatarUpload },
   setup() {
-    const pageSizes = reactive([20, 50, 100]);
+    const pageSizes = reactive([10, 20, 50, 100]);
     let query = ref({
       page: 1,
       pageSize: pageSizes[0],
