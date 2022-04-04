@@ -287,8 +287,24 @@ export const deleteUserInfo = (data) => {
 
 // 消费查询
 export const queryRechargeHistory = (data) => {
-    return request('/admin/recharge', {
+    return request('/recharge/admin', {
         method: 'get',
+        data
+    });
+};
+
+// 评论查询
+export const adminGetAllMessage = (data) => {
+    return request('/message/adminGetAllMessage', {
+        method: 'get',
+        data
+    });
+};
+
+// 删除评论
+export const deleteComment = (data) => {
+    return request('/message', {
+        method: 'delete',
         data
     });
 };

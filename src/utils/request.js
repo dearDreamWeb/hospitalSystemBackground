@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let test = 'http://192.168.31.98:8089/hospital';
+let test = 'http://192.168.31.98:8081/hospital';
 let test0 = 'http://192.168.31.134:8081/hospital';
 let test1 = 'http://hospital.liqiu.vip/hospital';
 let test2 = 'http://dockerhospital.liqiu.vip/hospital';

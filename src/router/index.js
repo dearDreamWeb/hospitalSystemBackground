@@ -67,6 +67,20 @@ const routes = [
                     title: '消费记录'
                 },
                 component: () => import( /* webpackChunkName: "table" */ "../views/RechargeHistory.vue")
+            },  {
+                path: "/comment",
+                name: "comment",
+                meta: {
+                    title: '评论管理'
+                },
+                component: () => import( /* webpackChunkName: "table" */ "../views/Comment.vue")
+            },  {
+                path: "/logs",
+                name: "logs",
+                meta: {
+                    title: '日志记录'
+                },
+                component: () => import( /* webpackChunkName: "table" */ "../views/Logs.vue")
             }, {
                 path: "/charts",
                 name: "basecharts",

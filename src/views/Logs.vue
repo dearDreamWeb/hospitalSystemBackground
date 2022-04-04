@@ -1,12 +1,12 @@
 <template>
   <div>
-    <el-tabs model-value="appointment" class="demo-tabs">
-      <el-tab-pane label="预约管理" name="appointment">
+    <el-tabs model-value="logs" class="demo-tabs">
+      <el-tab-pane label="评论管理" name="logs">
         <div class="container">
           <div class="handle-box">
             <el-input
-              v-model="name"
-              placeholder="请输入患者名字或者科室或者门诊"
+              v-model="query.name"
+              placeholder="请输入搜索医生名字或者患者名字"
               class="handle-input mr10"
               clearable
             ></el-input>
@@ -16,21 +16,6 @@
               @click="handleSearch"
               >搜索</el-button
             >
-            订单状态查询：
-            <el-select
-              v-model="queryStatus"
-              class="m-2"
-              placeholder="Select"
-              size="large"
-              @change="changeStatus"
-            >
-              <el-option
-                v-for="item in statusOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
           </div>
           <el-table
             :data="tableData"
@@ -42,63 +27,42 @@
             <el-table-column
               prop="id"
               label="ID"
-              width="80"
+              width="300"
               align="center"
             ></el-table-column>
             <el-table-column
-              width="100"
-              prop="reserveUser"
+              min-width="100"
+              prop="userName"
               label="患者名字"
             ></el-table-column>
             <el-table-column
-              min-width="150"
-              prop="reserveSection"
-              label="科室"
+              min-width="100"
+              prop="doctorName"
+              label="医生名字"
+            ></el-table-column>
+      
+            <el-table-column
+              width="80"
+              prop="grade"
+              label="评分"
             ></el-table-column>
             <el-table-column
-              min-width="150"
-              prop="reserveOutpatient"
-              label="门诊"
+              min-width="180"
+              prop="msg"
+              label="评论内容"
             ></el-table-column>
-            <el-table-column width="150" prop="reserveMoney" label="费用">
-              <template #default="scope">
-                ￥{{ scope.row.reserveMoney }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              min-width="120"
-              prop="phone"
-              label="预约手机号"
-            ></el-table-column>
-            <el-table-column width="150" prop="status" label="预约状态">
-              <template #default="scope">
-                <el-tag v-if="scope.row.status === 0" type="danger"
-                  >取消预约</el-tag
-                >
-                <el-tag v-if="scope.row.status === 1" type="success"
-                  >预约成功</el-tag
-                >
-                <el-tag v-if="scope.row.status === 2" type="warning"
-                  >问诊成功</el-tag
-                >
-              </template>
-            </el-table-column>
 
             <el-table-column width="200" prop="createTime" label="创建时间">
               <template #default="scope">
-                {{
-                  moment(scope.row.createTime * 1000).format(
-                    "YYYY-MM-DD HH:mm:ss"
-                  )
-                }}
+                {{ moment(scope.row.createTime).format("YYYY-MM-DD HH:mm:ss") }}
               </template>
             </el-table-column>
             <el-table-column width="200" prop="updateTime" label="更新时间">
               <template #default="scope">
                 {{
-                  moment(
-                    scope.row.updateTime * 1000 || scope.row.createTime * 1000
-                  ).format("YYYY-MM-DD HH:mm:ss")
+                  moment(scope.row.updateTime || scope.row.createTime).format(
+                    "YYYY-MM-DD HH:mm:ss"
+                  )
                 }}
               </template>
             </el-table-column>
@@ -111,10 +75,10 @@
               <template #default="scope">
                 <el-button
                   type="text"
-                  icon="el-icon-edit"
-                  :disabled="scope.row.status === 0"
+                  icon="el-icon-delete"
+                  class="red"
                   @click="handleDelete(scope.$index, scope.row)"
-                  >取消预约</el-button
+                  >删除</el-button
                 >
               </template>
             </el-table-column>
@@ -140,37 +104,22 @@
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import moment from "moment";
-import { deleteAdmin, updateReserve, queryReserve } from "../api/index";
+import {
+  adminGetAllMessage,
+  deleteComment,
+} from "../api/index";
+import AvatarUpload from "../components/AvatarUpload.vue";
 
 export default {
-  name: "appointment",
+  name: "logs",
+  components: { AvatarUpload },
   setup() {
-
-    const statusOptions = [
-      {
-        label: "全部",
-        value: -1,
-      },
-      {
-        label: "预约成功",
-        value: 1,
-      },
-      {
-        label: "取消预约",
-        value: 0,
-      },
-      {
-        label: "问诊成功",
-        value: 2,
-      },
-    ];
-    const queryStatus = ref(statusOptions[0].value);
     const pageSizes = reactive([10, 20, 50, 100]);
-    let query = reactive({
+    let query = ref({
       page: 1,
       pageSize: pageSizes[0],
+      name: "",
     });
-    const name = ref("");
     const tableData = ref([]);
     const total = ref(0);
 
@@ -180,15 +129,7 @@ export default {
 
     // 获取表格数据
     const getData = async () => {
-      const params = {
-        page: query.page,
-        pageSize: query.pageSize,
-        name:name.value
-      };
-      if (queryStatus.value !== -1) {
-        params.status = queryStatus.value;
-      }
-      const res = await queryReserve({ ...params });
+      const res = await adminGetAllMessage({ ...query.value });
       if (!res.success) {
         ElMessage.info(res.message);
         return;
@@ -196,66 +137,53 @@ export default {
       const { items, page, pageSize } = res.data;
       tableData.value = items;
       total.value = res.data.total;
-      query = { ...query, page, pageSize };
+      query.value = { ...query.value, page, pageSize };
     };
 
     // 查询操作
     const handleSearch = () => {
-      query = { ...query, page: 1 };
+      query.value = { ...query.value, page: 1 };
       getData();
     };
 
     // 分页导航
     const handlePageChange = (val) => {
-      query.page = val;
+      query.value.page = val;
       getData();
     };
 
     // 分页导航
     const handleSizeChange = (val) => {
-      query.pageSize = val;
+      query.value.pageSize = val;
       getData();
     };
 
     // 删除操作
     const handleDelete = (index, row) => {
       // 二次确认删除
-      ElMessageBox.confirm("确定要取消预约吗？", "提示", {
+      ElMessageBox.confirm("确定要删除吗？", "提示", {
         type: "warning",
       })
         .then(async () => {
-          const res = await updateReserve({
-            id: row.id,
-            status: 0,
-            reserveMoney: row.reserveMoney,
-            phone: row.phone,
-          });
+          const res = await deleteComment(row.id);
           if (res.success) {
-            ElMessage.success("取消预约成功");
+            ElMessage.success("删除成功");
             getData();
           }
         })
         .catch(() => {});
     };
 
-    const changeStatus = () => {
-      getData();
-    };
-
     return {
       query,
       tableData,
       total,
-      name,
       moment,
       pageSizes,
-      queryStatus,
-      statusOptions,
       handleSearch,
       handlePageChange,
       handleDelete,
       handleSizeChange,
-      changeStatus,
     };
   },
 };
@@ -271,7 +199,6 @@ export default {
 }
 
 .handle-input {
-  margin-left: 12px;
   width: 300px;
   display: inline-block;
 }

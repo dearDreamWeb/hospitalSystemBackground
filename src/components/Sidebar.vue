@@ -93,8 +93,18 @@ export default {
       },
       {
         icon: "el-icon-lx-crown",
+        index: "/comment",
+        title: "评论管理",
+      },
+      {
+        icon: "el-icon-lx-crown",
         index: "/admin",
         title: "管理员管理",
+      },
+      {
+        icon: "el-icon-lx-crown",
+        index: "/logs",
+        title: "日志记录",
       },
       {
         icon: "el-icon-lx-emoji",
